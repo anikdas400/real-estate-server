@@ -30,14 +30,19 @@ async function run() {
     const propertiesCollection = client.db('realDB').collection('properties')
     const userCollection = client.db('realDB').collection('users')
     const reviewsCollection = client.db('realDB').collection('reviews')
-    const wishCollection = client.db('realDB').collection('wishs')
+    const cartCollection = client.db('realDB').collection('carts')
 
 
     // user related api
     app.post('/users', async (req, res) => {
-      const cartItem = req.body
-      const result = await userCollection.insertOne(cartItem)
-      res.send(result)
+      const user = req.body;
+      const query = { email: user.email }
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: 'user already exists', insertedId: null })
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result);
     })
 
     app.get('/properties',async(req,res)=>{
@@ -45,24 +50,24 @@ async function run() {
         res.send(result)
     })
 
-    // wish related api
-    app.get('/wishs', async (req, res) => {
+    // carts related api
+    app.get('/carts', async (req, res) => {
       const email = req.query.email
       const query = { email: email }
-      const result = await wishCollection.find(query).toArray()
+      const result = await cartCollection.find(query).toArray()
       res.send(result)
     })
 
-    app.post('/wishs', async (req, res) => {
+    app.post('/carts', async (req, res) => {
       const cartItem = req.body
-      const result = await wishCollection.insertOne(cartItem)
+      const result = await cartCollection.insertOne(cartItem)
       res.send(result)
     })
 
-    app.delete('/wishs/:id', async (req, res) => {
+    app.delete('/carts/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
-      const result = await wishCollection.deleteOne(query)
+      const result = await cartCollection.deleteOne(query)
       res.send(result)
     })
 
