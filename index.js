@@ -29,11 +29,28 @@ async function run() {
 
     const propertiesCollection = client.db('realDB').collection('properties')
     const reviewsCollection = client.db('realDB').collection('reviews')
+    const wishCollection = client.db('realDB').collection('wishs')
 
     app.get('/properties',async(req,res)=>{
         const result = await propertiesCollection.find().toArray();
         res.send(result)
     })
+
+    // wish Collection
+    app.get('/wishs', async (req, res) => {
+      const email = req.query.email
+      const query = { email: email }
+      const result = await wishCollection.find(query).toArray()
+      res.send(result)
+    })
+    app.post('/wishs', async (req, res) => {
+      const cartItem = req.body
+      const result = await wishCollection.insertOne(cartItem)
+      res.send(result)
+    })
+
+    
+
     app.get('/reviews',async(req,res)=>{
         const result = await reviewsCollection.find().toArray();
         res.send(result)
