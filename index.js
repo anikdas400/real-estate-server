@@ -172,6 +172,12 @@ async function run() {
       res.send(result)
     })
 
+    app.post('/properties', verifyToken, async (req, res) => {
+      const item = req.body;
+      const result = await propertiesCollection.insertOne(item);
+      res.send(result);
+    });
+
     // carts related api
     app.get('/carts', async (req, res) => {
       const email = req.query.email
