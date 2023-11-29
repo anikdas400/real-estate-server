@@ -41,8 +41,8 @@ async function run() {
       res.send({ token });
     })
 
-     // middlewares 
-     const verifyToken = (req, res, next) => {
+    // middlewares 
+    const verifyToken = (req, res, next) => {
       // console.log('inside verify token', req.headers.authorization);
       if (!req.headers.authorization) {
         return res.status(401).send({ message: 'unauthorized access' });
@@ -68,11 +68,22 @@ async function run() {
       }
       next();
     }
+    // use verify admin after verifyToken
+    // const verifyAgent = async (req, res, next) => {
+    //   const email = req.decoded.email;
+    //   const query = { email: email };
+    //   const user = await userCollection.findOne(query);
+    //   const isAgent = user?.role === 'agent';
+    //   if (!isAgent) {
+    //     return res.status(403).send({ message: 'forbidden access' });
+    //   }
+    //   next();
+    // }
 
 
 
     // user related api
-    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
+    app.get('/users', verifyToken, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
@@ -91,6 +102,23 @@ async function run() {
         admin = user?.role === 'admin';
       }
       res.send({ admin });
+    })
+
+    // Agent api ...
+    app.get('/users/agent/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let agent = false;
+      if (user) {
+        agent= user?.role === 'agent';
+      }
+      res.send({ agent });
     })
 
 
@@ -117,6 +145,19 @@ async function run() {
       res.send(result);
     })
 
+    // Agent api
+    app.patch('/users/agent/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          role: 'agent'
+        }
+      }
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    })
+
 
     app.delete('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
@@ -126,9 +167,9 @@ async function run() {
     })
 
     // property related api
-    app.get('/properties',async(req,res)=>{
-        const result = await propertiesCollection.find().toArray();
-        res.send(result)
+    app.get('/properties', async (req, res) => {
+      const result = await propertiesCollection.find().toArray();
+      res.send(result)
     })
 
     // carts related api
@@ -152,11 +193,11 @@ async function run() {
       res.send(result)
     })
 
-    
 
-    app.get('/reviews',async(req,res)=>{
-        const result = await reviewsCollection.find().toArray();
-        res.send(result)
+
+    app.get('/reviews', async (req, res) => {
+      const result = await reviewsCollection.find().toArray();
+      res.send(result)
     })
 
 
@@ -171,10 +212,10 @@ async function run() {
 run().catch(console.dir);
 
 
-app.get('/',(req,res)=>{
-    res.send('real estate is standing')
+app.get('/', (req, res) => {
+  res.send('real estate is standing')
 })
 
-app.listen(port,()=>{
-    console.log(`estate server is runing:${port}`)
+app.listen(port, () => {
+  console.log(`estate server is runing:${port}`)
 })
