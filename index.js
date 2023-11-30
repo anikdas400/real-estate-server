@@ -69,16 +69,16 @@ async function run() {
       next();
     }
     // use verify admin after verifyToken
-    // const verifyAgent = async (req, res, next) => {
-    //   const email = req.decoded.email;
-    //   const query = { email: email };
-    //   const user = await userCollection.findOne(query);
-    //   const isAgent = user?.role === 'agent';
-    //   if (!isAgent) {
-    //     return res.status(403).send({ message: 'forbidden access' });
-    //   }
-    //   next();
-    // }
+    const verifyAgent = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const isAgent = user?.role === 'agent';
+      if (!isAgent) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      next();
+    }
 
 
 
@@ -177,6 +177,13 @@ async function run() {
       const result = await propertiesCollection.insertOne(item);
       res.send(result);
     });
+
+    app.delete('/properties/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await propertiesCollection.deleteOne(query);
+      res.send(result);
+    })
 
     // carts related api
     app.get('/carts', async (req, res) => {
